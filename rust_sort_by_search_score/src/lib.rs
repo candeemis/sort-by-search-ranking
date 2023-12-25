@@ -58,7 +58,6 @@ fn calculate_levenshtein_distance(search_term: &String, source: &String) -> usiz
     let st = search_term.to_lowercase();
     let ss = source.to_lowercase();
 
-    println!("testing: {} and {}", st, ss);
     if st == ss {
         return 0;
     }
