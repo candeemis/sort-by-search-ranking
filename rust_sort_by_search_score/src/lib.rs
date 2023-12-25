@@ -43,6 +43,52 @@ fn calculate_jaccard_index(search_term: &String, source: &String) -> f32 {
 }
 
 #[inline]
+fn calculate_levenshtein_distance(search_term: &String, source: &String) -> usize {
+    let st_length = search_term.len();
+    let ss_length = source.len();
+
+    if st_length == 0 {
+        return ss_length;
+    }
+
+    if ss_length == 0 {
+        return st_length;
+    }
+
+    let st = search_term.to_lowercase();
+    let ss = source.to_lowercase();
+
+    println!("testing: {} and {}", st, ss);
+    if st == ss {
+        return 0;
+    }
+
+    let mut matrix: Vec<usize> = (0..=(st_length + 1)).collect();
+
+    let search_term_chars: Vec<char> = st.chars().collect();
+    let source_chars: Vec<char> = ss.chars().collect();
+
+    for j in 1..(ss_length + 1) {
+        let mut previous = matrix[0];
+        matrix[0] = j;
+
+        for i in 1..(st_length + 1) {
+            let current = matrix[i];
+
+            if search_term_chars[i - 1] == source_chars[j - 1] {
+                matrix[i] = previous;
+            } else {
+                matrix[i] = std::cmp::min(previous, std::cmp::min(matrix[i], matrix[i - 1])) + 1;
+            }
+
+            previous = current;
+        }
+    }
+
+    matrix[st_length]
+}
+
+#[inline]
 fn compare_floats(left: &f32, right: &f32) -> Ordering {
     if left > right {
         Ordering::Greater
@@ -148,7 +194,7 @@ mod tests {
     }
 
     #[test]
-    fn it_calculates_jaccard_index_of_given_strings() {
+    fn it_correctly_calculates_jaccard_index_of_given_strings() {
         let test_cases: Vec<(String, String, f32)> = vec![
             (
                 String::from("berlin"),
@@ -181,6 +227,32 @@ mod tests {
             .iter()
             .for_each(|(search_term, source, expected)| {
                 let score = calculate_jaccard_index(search_term, source);
+                assert_eq!(score, *expected);
+            });
+    }
+
+    #[test]
+    fn it_correctly_calculates_levenshtein_distance_of_given_strings() {
+        let test_cases: Vec<(String, String, usize)> = vec![
+            (String::from("berlin"), String::from("berlino"), 1),
+            (String::from("berlin"), String::from("berlin"), 0),
+            (String::from("berlin"), String::from("berl"), 2),
+            (String::from("berlin"), String::from("ber"), 3),
+            (String::from("berlin"), String::from("be"), 4),
+            (String::from("berlin"), String::from("b"), 5),
+            (String::from("berlin"), String::from("berlins"), 1),
+            (String::from("hello"), String::from("hello"), 0),
+            (String::from("hello"), String::from("helo"), 1),
+            (String::from("hello"), String::from("world"), 4),
+            (String::from("pumpkin"), String::from("world"), 7),
+            (String::from("pumpkin"), String::from("pumpin"), 1),
+            (String::from("pumpkin"), String::from("pumpkin"), 0),
+        ];
+
+        test_cases
+            .iter()
+            .for_each(|(search_term, source, expected)| {
+                let score = calculate_levenshtein_distance(search_term, source);
                 assert_eq!(score, *expected);
             });
     }
