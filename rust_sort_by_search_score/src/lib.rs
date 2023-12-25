@@ -6,7 +6,7 @@ struct SourceScore {
 }
 
 #[inline]
-fn calculate_score(search_term: &String, source: &String) -> f32 {
+fn calculate_substring_score(search_term: &String, source: &String) -> f32 {
     if source.starts_with(search_term) {
         1f32 + (search_term.len() as f32 / source.len() as f32)
     } else if source.contains(search_term) {
@@ -36,7 +36,7 @@ pub fn sort_by_ranking_score(search_term: &String, source: Vec<String>) -> Vec<S
     let mut source_scores: Vec<SourceScore> = source
         .iter()
         .map(|source| SourceScore {
-            score: calculate_score(search_term, source),
+            score: calculate_substring_score(search_term, source),
             source: source.to_string(),
         })
         .collect();
